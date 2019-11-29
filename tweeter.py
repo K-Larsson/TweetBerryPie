@@ -2,8 +2,10 @@ import tweepy, json, shutil, os
 from time import sleep
 from picamera import PiCamera
 
-auth = tweepy.OAuthHandler("sJAvI2G4X9TQLMlGBTdh3RebH", "cu6amxA3vJ7OzsjwONTX4XfBZFGWYP8yfzCCbVn86MWj6Iq3uE")
-auth.set_access_token("1047748675596931072-2ku6R9MkhoI5q4cDPTfNxwzGF2JsJd", "vTvurdFZqfyI2tTImRzIvSfjKhvunejsyATRM3w7ovhCe")
+with open("twitterauth.json") as file:
+    secrets = json.load(file)
+auth = tweepy.OAuthHandler(secrets["consumer_key"], secrets["consumer_secret"])
+auth.set_access_token(secrets["access_token"], secrets["access_token_secret"])
 api = tweepy.API(auth)
 
 camera = PiCamera()
