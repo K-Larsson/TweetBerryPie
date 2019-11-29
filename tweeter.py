@@ -1,11 +1,10 @@
-import tweepy, json, shutil, os
-from time import sleep
+import time, tweepy, json, shutil, os, random
 from picamera import PiCamera
 
-with open("twitterauth.json") as file:
+with open('twitterauth.json') as file:
     secrets = json.load(file)
-auth = tweepy.OAuthHandler(secrets["consumer_key"], secrets["consumer_secret"])
-auth.set_access_token(secrets["access_token"], secrets["access_token_secret"])
+auth = tweepy.OAuthHandler(secrets['consumer_key'], secrets['consumer_secret'])
+auth.set_access_token(secrets['access_token'], secrets['access_token_secret'])
 api = tweepy.API(auth)
 
 camera = PiCamera()
@@ -15,13 +14,31 @@ camera.framerate
 currentTime = ""
 filename = ""
 picFolder = "/home/pi/Documents/tweeter/pics/"
-status = ["heyo", "lmao", "tets", "test"]
+status = ["Look at this magnificent tree!",
+          "Do you even beep boop, bro?",
+          "Another day, another picture!",
+          "I love the smell of pictures in the morning... Or whatever time it is.",
+          "Frankly my dear, I dont give a circuit.",
+          "I'm going to make him a picture he can't refuse.",
+          "Go ahead, make my picture.",
+          "May the picture be with you.",
+          "You talking to m... I mean, uh, beep boop!",
+          "TweetBerry, TweetBerry Pie",
+          "Show me the picture!",
+          "Hey! I'm working here!",
+          "You can't handle the picture!",
+          "You're gonna need a bigger picture.",
+          "I'll be back.",
+          "Mama always said life is like a box of pictures.",
+          "Houston, we have a picture.",
+          "Do I feel picturesque? Well, do ya, punk?"]
 
-def sendTweet(a):
+def sendTweet(a, b):
     global status
-    randStatus = random.choice([0, len(status)]) + " @ " + str(a[:19])
-    print(randStatus)
-    api.update_with_media(filename, randStatus)
+    c = b + a
+    randStatus = status[random.choice([0, len(status) - 1])] + " @ " + str(a[:19])
+    print(randStatus + " - " + c[:4])
+    api.update_with_media(c, randStatus)
 
 def deleteTweets():
     deletedTweets = 0
@@ -33,9 +50,11 @@ def deleteTweets():
 
 def takePhoto(a):
     global filename
+    a = a[4:16]
+    a = a.replace(" ", "_")
     filename = a + ".jpg".format(a)
     camera.start_preview(alpha=150)
-    sleep(5)
+    time.sleep(5)
     camera.capture(filename)
     camera.stop_preview()
 
@@ -47,11 +66,11 @@ def delPic(a):
     os.remove(a)
     print("Deleted " + a)
 
-for i in range(1, 2):
-        localtime = time.asctime(time.localtime(time.time()))
-        takePhoto(localtime)
-        movePic(filename, picFolder)
-        sendTweet(filename)
-        # delPic(filename)
-        sleep(10)
-        # deleteTweets()
+#for i in range(1, 2):
+while True:
+    localtime = time.asctime(time.localtime(time.time()))
+    takePhoto(localtime)
+    movePic(filename, picFolder)
+    delPic(filename)
+    sendTweet(filename, picFolder)
+    time.sleep(3600)
