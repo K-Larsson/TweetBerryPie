@@ -7,9 +7,8 @@ auth = tweepy.OAuthHandler(secrets['consumer_key'], secrets['consumer_secret'])
 auth.set_access_token(secrets['access_token'], secrets['access_token_secret'])
 api = tweepy.API(auth)
 
-camera = PiCamera()
-camera.resolution = (1920, 1080)
-camera.framerate
+camera = PiCamera(resolution=(1920, 1080), framerate=30)
+camera.awb_mode = "fluorescent"
 
 currentTime = ""
 filename = ""
@@ -36,8 +35,8 @@ status = ["Look at this magnificent tree!",
 def sendTweet(a, b):
     global status
     c = b + a
-    randStatus = status[random.choice([0, len(status) - 1])] + " @ " + str(a[:19])
-    print(randStatus + " - " + c[:4])
+    randStatus = status[random.choice([0, len(status) - 1])] + " @ " + str(a[4:19])
+    print(randStatus + " - " + c)
     api.update_with_media(c, randStatus)
 
 def deleteTweets():
@@ -66,11 +65,11 @@ def delPic(a):
     os.remove(a)
     print("Deleted " + a)
 
-#for i in range(1, 2):
-while True:
+#while True:
+for i in range(1, 2):
     localtime = time.asctime(time.localtime(time.time()))
     takePhoto(localtime)
     movePic(filename, picFolder)
     delPic(filename)
     sendTweet(filename, picFolder)
-    time.sleep(3600)
+    time.sleep(10)
