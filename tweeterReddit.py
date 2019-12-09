@@ -7,11 +7,24 @@ auth = tweepy.OAuthHandler(secrets['consumer_key'], secrets['consumer_secret'])
 auth.set_access_token(secrets['access_token'], secrets['access_token_secret'])
 api = tweepy.API(auth)
 
-picPath = "C:/users/megak/desktop/"
-picFolder = "/home/pi/Documents/tweeter/pics/"
-url = "https://www.reddit.com/r/pics.json"
+uploadError = True
+localTime = ""
 filename = ""
-status = ["Look at this magnificent tree!",
+statusText = ""
+picUrl = ""
+picFolder = "/home/pi/Documents/tweeter/pics/"
+urlArray = ["https://www.reddit.com/r/pics.json",
+       "https://www.reddit.com/r/getmotivated.json",
+       "https://www.reddit.com/r/roomporn.json",
+       "https://www.reddit.com/r/earthporn.json",
+       "https://www.reddit.com/r/astrophotography.json",
+       "https://www.reddit.com/r/cozyplaces.json",
+       "https://www.reddit.com/r/cityporn.json",
+       "https://www.reddit.com/r/houseporn.json",
+       "https://www.reddit.com/r/viewporn.json",
+       "https://www.reddit.com/r/imaginaryinteriors.json",
+       "https://www.reddit.com/r/architectureporn.json"]
+statusArray = ["Look at this magnificent picture!",
           "Do you even beep boop, bro?",
           "Another day, another picture!",
           "I love the smell of pictures in the morning... Or whatever time it is.",
@@ -30,12 +43,11 @@ status = ["Look at this magnificent tree!",
           "Houston, we have a picture.",
           "Do I feel picturesque? Well, do ya, punk?"]
 
-def sendTweet(a, b):
-    global status
-    c = b + a
-    randStatus = random.choice(status) + " @ " + str(a[:12])
-    print(randStatus + " - " + c)
-    api.update_with_media(c, randStatus)
+def sendTweet(filename, picFolder, localTime, statusArray, statusText, picUrl):
+    path = picFolder + filename
+    statusText = random.choice(statusArray) + " @ " + str(localTime[:12]) + statusText
+    print("Time: " + localTime + "\nPicture from: " + picUrl + "\nPicture saved in: " + path + "\nStatus: \'" + statusText + "\'")
+    api.update_with_media(path, statusText)
 
 def deleteTweets():
     deletedTweets = 0
@@ -45,29 +57,40 @@ def deleteTweets():
         deletedTweets += 1
     print("Deleted " + str(deletedTweets) + " tweets")
 
-def fetchPost(localTime, url, path):
+def fetchPost(localTimeEdit, urlArray, picFolder):
     global filename
-    localTime = localTime[4:16]
-    localTime = localTime.replace(" ", "_")
-    localTime = localTime.replace(":", "_")
-    filename = localTime + ".jpg".format(localTime)
-    response = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'tweeterReddit'}))
+    global statusText
+    global picUrl
+    filename = localTimeEdit + ".jpg".format(localTimeEdit)
+    chosenUrl = random.choice(urlArray)
+    response = urllib.request.urlopen(urllib.request.Request(chosenUrl, headers={'User-Agent': 'tweeterReddit'}))
     data = json.loads(response.read())
     text = json.dumps(data)
-    path = path + filename
-    urllib.request.urlretrieve(text[text.find('url": "https://i') + 7:text.find('"', text.find('url": "https://i') + 7)], path)
-    picUrl = text[text.find('url": "https://i') + 7:text.find('"', text.find('url": "https://i') + 7)]
-    statusText = "Owner of the picture: " + text[text.find('author": "') + 10:text.find('"', text.find('author": "') + 10)]
-    print("Time: " + localTime + "\nStatus: \'" + statusText + "\'\nPicture from: " + picUrl + "\nPicture saved in: " + path)
+    filePath = picFolder + filename
+    urllib.request.urlretrieve(text[text.find('url": "https://i') + 7:text.find('"', text.find('url": "https://i') + 7)], filePath)
+    picUrl = chosenUrl + "\n              "+ text[text.find('url": "https://i') + 7:text.find('"', text.find('url": "https://i') + 7)]
+    statusText = " by u/" + text[text.find('author": "') + 10:text.find('"', text.find('author": "') + 10)]
 
 #Countdown
 for i in list(range(5))[::-1]:
     print(i + 1)
     time.sleep(1)
 
-#while True:
-for i in range(0, 24):
-    localtime = time.asctime(time.localtime(time.time()))
-    fetchPost(localtime, url, picFolder)
-    sendTweet(filename, picFolder)
+#for i in range(0, 24):
+while True:
+    localTime = time.asctime(time.localtime(time.time()))
+    localTime = localTime[4:16]
+    localTimeEdit = localTime.replace(" ", "_")
+    localTimeEdit = localTimeEdit.replace(":", "_")
+    fetchPost(localTimeEdit, urlArray, picFolder)
+    while uploadError:
+        try:
+            sendTweet(filename, picFolder, localTime, statusArray, statusText, picUrl)
+            uploadError = False
+        except:
+            uploadError = True
+            print("FAILURE, probably the file size. Deleting " + picFolder + filename + ".\nTrying again...")
+            os.remove(picFolder + filename)
+            fetchPost(localTimeEdit, urlArray, picFolder)
+    print("Success\n                                                                  ")
     time.sleep(3600)
