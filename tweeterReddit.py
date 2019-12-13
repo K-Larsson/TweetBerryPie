@@ -92,5 +92,6 @@ while True:
             print("FAILURE, probably the file size. Deleting " + picFolder + filename + ".\nTrying again...")
             os.remove(picFolder + filename)
             fetchPost(localTimeEdit, urlArray, picFolder)
+    uploadError = True
     print("Success\n                                                                  ")
     time.sleep(3600)
