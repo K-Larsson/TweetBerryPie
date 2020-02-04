@@ -79,7 +79,8 @@ def fetchPost(localTimeEdit, urlArray, picFolder, urlError):
         for i in range(len(usedUrlArray)):
             if usedUrlArray[i] == picUrl:
                 urlError = True
-                print("FOUND USED URL, CHOOSING A NEW ONE")
+                print("FOUND USED URL, CHOOSING A NEW ONE (in 15 min)")
+                time.sleep(900)
         usedUrlArray.append(picUrl)
         if len(usedUrlArray) >= 10:
             usedUrlArray.pop(0)
@@ -111,4 +112,4 @@ while True:
             fetchPost(localTimeEdit, urlArray, picFolder, urlError)
     uploadError = True
     print("Success\n")
-    time.sleep(600)
+    time.sleep(3600)
