@@ -8,10 +8,12 @@ auth.set_access_token(secrets['access_token'], secrets['access_token_secret'])
 api = tweepy.API(auth)
 
 uploadError = True
+urlError = True
 localTime = ""
 filename = ""
 statusText = ""
 picUrl = ""
+fullPicUrl = ""
 picFolder = "/home/pi/Documents/tweeter/pics/"
 urlArray = ["https://www.reddit.com/r/pics.json",
        "https://www.reddit.com/r/getmotivated.json",
@@ -24,6 +26,7 @@ urlArray = ["https://www.reddit.com/r/pics.json",
        "https://www.reddit.com/r/viewporn.json",
        "https://www.reddit.com/r/imaginaryinteriors.json",
        "https://www.reddit.com/r/architectureporn.json"]
+usedUrlArray = []
 statusArray = ["Look at this magnificent picture!",
           "Do you even beep boop, bro?",
           "Another day, another picture!",
@@ -42,11 +45,12 @@ statusArray = ["Look at this magnificent picture!",
           "Mama always said life is like a box of pictures.",
           "Houston, we have a picture.",
           "Do I feel picturesque? Well, do ya, punk?"]
+usedStatusTextArray = []
 
-def sendTweet(filename, picFolder, localTime, statusArray, statusText, picUrl):
+def sendTweet(filename, picFolder, localTime, statusArray, statusText, fullPicUrl):
     path = picFolder + filename
     statusText = random.choice(statusArray) + " @ " + str(localTime[:12]) + statusText
-    print("Time: " + localTime + "\nPicture from: " + picUrl + "\nPicture saved in: " + path + "\nStatus: \'" + statusText + "\'")
+    print("Time: " + localTime + "\nPicture from: " + fullPicUrl + "\nPicture saved in: " + path + "\nStatus: \'" + statusText + "\'")
     api.update_with_media(path, statusText)
 
 def deleteTweets():
@@ -57,18 +61,31 @@ def deleteTweets():
         deletedTweets += 1
     print("Deleted " + str(deletedTweets) + " tweets")
 
-def fetchPost(localTimeEdit, urlArray, picFolder):
+def fetchPost(localTimeEdit, urlArray, picFolder, urlError):
     global filename
     global statusText
     global picUrl
     filename = localTimeEdit + ".jpg".format(localTimeEdit)
-    chosenUrl = random.choice(urlArray)
-    response = urllib.request.urlopen(urllib.request.Request(chosenUrl, headers={'User-Agent': 'tweeterReddit'}))
-    data = json.loads(response.read())
-    text = json.dumps(data)
-    filePath = picFolder + filename
-    urllib.request.urlretrieve(text[text.find('url": "https://i') + 7:text.find('"', text.find('url": "https://i') + 7)], filePath)
-    picUrl = chosenUrl + "\n              "+ text[text.find('url": "https://i') + 7:text.find('"', text.find('url": "https://i') + 7)]
+    while urlError:
+        urlError = False
+        chosenUrl = random.choice(urlArray)
+        response = urllib.request.urlopen(urllib.request.Request(chosenUrl, headers={'User-Agent': 'tweeterReddit'}))
+        s = response.read().decode('utf-8')
+        data = json.loads(s)
+        text = json.dumps(data)
+        filePath = picFolder + filename
+        urllib.request.urlretrieve(text[text.find('url": "https://i') + 7:text.find('"', text.find('url": "https://i') + 7)], filePath)
+        picUrl = text[text.find('url": "https://i') + 7:text.find('"', text.find('url": "https://i') + 7)]
+        for i in range(len(usedUrlArray)):
+            if usedUrlArray[i] == picUrl:
+                urlError = True
+                print("FOUND USED URL, CHOOSING A NEW ONE")
+        usedUrlArray.append(picUrl)
+        if len(usedUrlArray) >= 10:
+            usedUrlArray.pop(0)
+        print(usedUrlArray)
+    urlError = True
+    fullPicUrl = chosenUrl + "\n              " + picUrl
     statusText = " by u/" + text[text.find('author": "') + 10:text.find('"', text.find('author": "') + 10)]
 
 #Countdown
@@ -82,16 +99,16 @@ while True:
     localTime = localTime[4:16]
     localTimeEdit = localTime.replace(" ", "_")
     localTimeEdit = localTimeEdit.replace(":", "_")
-    fetchPost(localTimeEdit, urlArray, picFolder)
+    fetchPost(localTimeEdit, urlArray, picFolder, urlError)
     while uploadError:
         try:
-            sendTweet(filename, picFolder, localTime, statusArray, statusText, picUrl)
+            sendTweet(filename, picFolder, localTime, statusArray, statusText, fullPicUrl)
             uploadError = False
         except:
             uploadError = True
-            print("FAILURE, probably the file size. Deleting " + picFolder + filename + ".\nTrying again...")
+            print("\nFAILURE, probably the file size. Deleting " + picFolder + filename + ".\nTrying again...")
             os.remove(picFolder + filename)
-            fetchPost(localTimeEdit, urlArray, picFolder)
+            fetchPost(localTimeEdit, urlArray, picFolder, urlError)
     uploadError = True
-    print("Success\n                                                                  ")
-    time.sleep(3600)
+    print("Success\n")
+    time.sleep(600)
