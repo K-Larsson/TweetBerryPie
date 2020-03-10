@@ -1,4 +1,3 @@
-#!/usr/src/Python-3.8.0 python3
 import time, tweepy, json, shutil, os, random, urllib
 
 with open('twitterauth.json') as file:
@@ -89,12 +88,10 @@ def fetchPost(localTimeEdit, urlArray, picFolder, urlError):
     fullPicUrl = chosenUrl + "\n              " + picUrl
     statusText = " by u/" + text[text.find('author": "') + 10:text.find('"', text.find('author": "') + 10)]
 
-#Countdown
 for i in list(range(5))[::-1]:
     print(i + 1)
     time.sleep(1)
 
-#for i in range(0, 24):
 while True:
     localTime = time.asctime(time.localtime(time.time()))
     localTime = localTime[4:16]
@@ -112,4 +109,4 @@ while True:
             fetchPost(localTimeEdit, urlArray, picFolder, urlError)
     uploadError = True
     print("Success\n")
-    time.sleep(3600)
+    time.sleep(18001)
